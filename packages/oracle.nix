@@ -6,7 +6,7 @@
   version = "11.5.8";
   sources = {
     x86_64-darwin = fetch "macos64" "sha256-rd4VIbak+QUnL3MQg1jpOkP1/QJTvkTqzNlQx33Pih0=";
-    x86_64-linux = fetch "linuxx64" "sha256-P3aQJNzBCJO2SNxYjnDwzckHi7zp6xzIc7qm4Qb703w=";
+    x86_64-linux = fetch "linuxx64" "sha256-qL1mewcWPloshdzixxmAl/fH+OUiiZbgwVUXsQut3MY=";
   };
   fetch = platform: sha256:
     fetchurl {
