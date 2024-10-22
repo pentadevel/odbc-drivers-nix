@@ -43,6 +43,8 @@
       # Overlay that can be imported so you can access the packages
       # using odbc-drivers-nix.overlay
       overlay = final: prev: {
+        db2-odbc-driver = prev.pkgs.callPackage ./packages/db2.nix {};
+        postgres-odbc-driver = prev.pkgs.callPackage ./packages/postgres.nix {};
         odbc-driver-pkgs = outputs.packages.${prev.system};
       };
     };
