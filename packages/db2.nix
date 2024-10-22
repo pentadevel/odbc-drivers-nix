@@ -1,75 +1,45 @@
 {
-  pkgs,
-  specialArgs ? {},
-}: let
-  defaultArgs = {
-    pname = "db2-odbc-driver";
-    version = "11.5.9";
+  autoPatchelfHook,
+  fetchurl,
+  glibc,
+  lib,
+  libxml2,
+  pam,
+  libxcrypt-legacy,
+  stdenv,
+}: {}: let
+  pname = "db2-odbc-driver";
+  version = "11.5.8";
+  sources = {
+    aarch64-darwin = fetch "macos64" "sha256-rd4VIbak+QUnL3MQg1jpOkP1/QJTvkTqzNlQx33Pih0=";
+    x86_64-darwin = fetch "macos64" "sha256-rd4VIbak+QUnL3MQg1jpOkP1/QJTvkTqzNlQx33Pih0=";
+    x86_64-linux = fetch "linuxx64" "sha256-qL1mewcWPloshdzixxmAl/fH+OUiiZbgwVUXsQut3MY=";
   };
-  args = defaultArgs // specialArgs;
+  fetch = platform: sha256:
+    fetchurl {
+      inherit sha256;
+      url = "https://public.dhe.ibm.com/ibmdl/export/pub/software/data/db2/drivers/odbc_cli/v${version}/${platform}_odbc_cli.tar.gz";
+    };
 in
-  pkgs.stdenv.mkDerivation {
-    pname = args.pname;
-    version = args.version;
-    src = ./.;
+  stdenv.mkDerivation {
+    inherit pname version;
+    src = sources.${stdenv.hostPlatform.system};
 
-    nativeBuildInputs = pkgs.lib.optional pkgs.stdenv.isLinux [
-      pkgs.libkrb5
-      pkgs.autoPatchelfHook
+    nativeBuildInputs = lib.optional stdenv.isLinux [
+      autoPatchelfHook
     ];
 
-    buildInputs =
-      [
-        pkgs.libxml2
-        pkgs.pam
-        pkgs.stdenv.cc.cc.lib
-      ]
-      # When using glibc >= 2.36 on linux need libxcrypt-legacy for libcrypt.so
-      # https://github.com/NixOS/nixpkgs/issues/223805
-      ++ pkgs.lib.optionals (pkgs.stdenv.isLinux) [
-        pkgs.libxcrypt-legacy
-      ]
-      ++ pkgs.lib.optionals (pkgs.stdenv.isDarwin) [
-        pkgs.libxcrypt
-      ];
+    # when upgrading to glibc >= 2.36 may need libxcrypt-legacy for libcrypt.so
+    # https://github.com/NixOS/nixpkgs/issues/223805
+    buildInputs = [
+      libxcrypt-legacy
+      libxml2
+      pam
+      stdenv.cc.cc.lib
+    ];
 
-    # Ideally darwin would unpack the source dmg with something like undmg or hdiutil. Unfortunately
-    # the Db2 image is signed which is not supported currently in undmg and hdiutil would require
-    # the derivation to be impure.
-    installPhase =
-      if pkgs.stdenv.isDarwin
-      then ''
-        mkdir -p $out
-        tar --extract \
-          --gunzip \
-          --file ./drivers/macos/v11.5.9/ibm_data_server_driver_for_odbc_cli.tar.gz \
-          --directory ./drivers
-        cp -r ./drivers/clidriver/adm $out
-        cp -r ./drivers/clidriver/bin $out
-        cp -r ./drivers/clidriver/bnd $out
-        cp -r ./drivers/clidriver/cfg $out
-        cp -r ./drivers/clidriver/cfgcache $out
-        cp -r ./drivers/clidriver/conv $out
-        cp -r ./drivers/clidriver/db2dump $out
-        cp -r ./drivers/clidriver/lib $out
-        cp -r ./drivers/clidriver/license $out
-        cp -r ./drivers/clidriver/msg $out
-      ''
-      else ''
-        mkdir -p $out
-        tar --extract \
-          --gunzip \
-          --file ./drivers/linux/v11.5.9/ibm_data_server_driver_for_odbc_cli.tar.gz \
-          --directory ./drivers
-        cp -r ./drivers/clidriver/adm $out
-        cp -r ./drivers/clidriver/bin $out
-        cp -r ./drivers/clidriver/cfg $out
-        cp -r ./drivers/clidriver/cfgcache $out
-        cp -r ./drivers/clidriver/conv $out
-        cp -r ./drivers/clidriver/db2dump $out
-        cp -r ./drivers/clidriver/lib $out
-        cp -r ./drivers/clidriver/license $out
-        cp -r ./drivers/clidriver/msg $out
-        cp -r ./drivers/clidriver/properties $out
-      '';
+    installPhase = ''
+      mkdir -p $out/lib
+      cp -r lib/* $out/lib
+    '';
   }
