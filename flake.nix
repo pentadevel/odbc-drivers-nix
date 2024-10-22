@@ -2,7 +2,7 @@
   description = "Nix flake for ODBC drivers";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -20,18 +20,11 @@
       };
     in {
       # packages exported by the flake
-      packages = rec {
-        db2-odbc-driver = pkgs.callPackage ./packages/db2.nix {
-          inherit pkgs;
-        };
-        postgres-odbc-driver = pkgs.callPackage ./packages/postgres.nix {
-          inherit pkgs;
-        };
-        # broken with latest updates
-        # mariadb-odbc-driver = pkgs.callPackage ./packages/mariadb.nix {
-        #   inherit pkgs;
-        # };
-        default = postgres-odbc-driver;
+      packages = {
+        db2-odbc-driver = pkgs.db2-odbc-driver {};
+        postgres-odbc-driver = pkgs.postgres-odbc-driver {};
+        mariadb-odbc-driver = pkgs.mariadb-odbc-driver {};
+        default = pkgs.postgres-odbc-driver {};
       };
 
       # nix fmt
@@ -45,7 +38,7 @@
       overlay = final: prev: {
         db2-odbc-driver = prev.pkgs.callPackage ./packages/db2.nix {};
         postgres-odbc-driver = prev.pkgs.callPackage ./packages/postgres.nix {};
-        odbc-driver-pkgs = outputs.packages.${prev.system};
+        mariadb-odbc-driver = prev.pkgs.callPackage ./packages/mariadb.nix {};
       };
     };
 }
