@@ -4,7 +4,7 @@
 }: {}: let
   pname = "mssql-odbc-driver";
   version = "11.5.8";
-  version = "${versionMajor}.${versionMinor}.${versionAdditional}-1";
+  # version = "${versionMajor}.${versionMinor}.${versionAdditional}-1";
 
     versionMajor = "17";
     versionMinor = "7";
